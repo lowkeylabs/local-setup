@@ -36,12 +36,15 @@ choco install -y 7zip
 choco install -y microsoft-windows-terminal
 choco install -y sqlserver-cmdlineutils
 choco install -y sqlserver-odbcdriver
-choco install -y googlechrome
 # Reset environment path
  $Env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine")
 
 choco install -y visualstudio2019enterprise
 choco install -y windows-sdk-11-version-21h2-all
+choco install -y nodejs-lts
+choco install -y openjdk11
+choco install -y androidstudio
+choco install -y jq
 $Env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine")
 
 # Another round of tools
@@ -89,8 +92,6 @@ Get-Certificate -Template 'VCU-PowershellCodeSigning' -CertStoreLocation "Cert:\
 # 1. Ensure Powershell 7 path scripts all work.
 # 1. Add ODBC system connector for EGRPROD
 # 1. Verify 
-
-
 
 
 
