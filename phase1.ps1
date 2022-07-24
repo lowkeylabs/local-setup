@@ -20,24 +20,35 @@ if(-not (Test-Administrator))
     exit 1;
 }
 
+# Install Powershell Certificate
+Get-Certificate -Template 'VCU-PowershellCodeSigning' -CertStoreLocation "Cert:\currentuser\my"
+
+# Set up important system environment variables
+[Environment]::SetEnvironmentVariable("HOMEIPADDRESS",(get-netipaddress -interfacealias "Ethernet" -AddressFamily "IPv4").IPAddress,"Machine")
+
+# Remove app execution alias from local path. This will prevent PYTHON from being overridden.
+# ADD CODE HERE! $env:localappdata\Microsoft\WindowsApps
 
 # Install Chocolatey
-Set-ExecutionPolicy Bypass -Scope Process -Force; \
-[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; \
-iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 # Reset environment
 $Env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine")
 
-# Install packages
-choco install -y powershell-core --packageparameters '"/CleanUpPath"'
+# Install VSCODE and packages
 choco install -y vscode
+# Reset environment path
+$Env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine")
+code --install-extension ms-vscode.powershell
+
+
+choco install -y powershell-core --packageparameters '"/CleanUpPath"'
 choco install -y git.install --params "/GitAndUnixToolsOnPath /WindowsTerminal/Editor:VisualStudioCode"
 choco install -y 7zip
 choco install -y microsoft-windows-terminal
 choco install -y sqlserver-cmdlineutils
 choco install -y sqlserver-odbcdriver
 # Reset environment path
- $Env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine")
+$Env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine")
 
 choco install -y visualstudio2019enterprise
 choco install -y windows-sdk-11-version-21h2-all
@@ -53,45 +64,70 @@ choco install -y evernote
 choco install -y docker-desktop
 $Env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine")
 
+# Make `refreshenv` available right away, by defining the $env:ChocolateyInstall
+# variable and importing the Chocolatey profile module.
+# Note: Using `. $PROFILE` instead *may* work, but isn't guaranteed to.
+$env:ChocolateyInstall = Convert-Path "$((Get-Command choco).Path)\..\.."   
+Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+
+# refreshenv is now an alias for Update-SessionEnvironment
+# (rather than invoking refreshenv.cmd, the *batch file* for use with cmd.exe)
+# This should make git.exe accessible via the refreshed $env:PATH, so that it
+# can be called by name only.
+refreshenv
 
 # download local setup scripts using GIT and add to path.
 if (-not (Get-Command "git.exe" -ErrorAction silent)){
     write-error "GIT.EXE not installed on path.  Restart command shell."
 }
-if (-not Test-Path "$env:userprofile\Projects"){
-    new-object  $env:userprofile\Projects -ItemType Directory
+if (-not (Test-Path "$env:userprofile\Projects")){
+    new-item  $env:userprofile\Projects -ItemType Directory
 }
 cd $env:userprofile\Projects
 git clone https://github.com/lowkeylabs/local-setup.git
 
 # Add setup path to top of current system path and reset local path
 $OLDPATH = [System.Environment]::GetEnvironmentVariable('PATH','machine')
-$NEWPATH = "$env:userprofile\Projects;" + "$OLDPATH"
+$NEWPATH = "$env:userprofile\Projects\local-setup;" + "$OLDPATH"
 [Environment]::SetEnvironmentVariable("PATH", "$NEWPATH", "Machine")
 $Env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine")
 
-# Install python packages
+# Install pywin, needs to be codesigned
 choco install -y pyenv-win
 $Env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine")
+cd $env:userprofile\.pyenv\pyenv-win\bin
+codesign pyenv.ps1
+
+# refreshenv is from Chocolatey
+#
+refreshenv
+
+# Install R and RStudio. May need to be expanded to install particular libraryies
+choco install -y r.project
+choco install -y r.studio
+choco install -y rtools
+choco install -y miktex
+
+
+## Phase 2 stuff. The shell needs to be stopped and restarted to capture other non-Path fixes.
+#
+### Note - python "App execution alias" needs to be turned off or python won't work
 pyenv install 3.9.6
 pyenv global 3.9.6
 (Invoke-WebRequest -Uri https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -UseBasicParsing).Content | python -
 
 # Set up important system environment variables
-[Environment]::SetEnvironmentVariable("HOMEIPADDRESS",(get-netipaddress -interfacealias "vEthernet (EGR-SecNet)").IPAddress,"Machine")
-
-# Install Powershell Certificate
-Get-Certificate -Template 'VCU-PowershellCodeSigning' -CertStoreLocation "Cert:\currentuser\my"
+[Environment]::SetEnvironmentVariable("HOMEIPADDRESS",(get-netipaddress -interfacealias "Ethernet" -AddressFamily "IPv4").IPAddress,"Machine")
 
 
-# Setup tasks
+# Other setup tasks
 # 1. Create SSH key in $Env:UserProfile\.ssh
 # 1. Install SSH public key on https://scm.vcu.edu/plugins/servlet/ssh/account/keys
 #       Label the key <jdleonard>@<machine name>,  e.g., jdleonard@EGR-JL-RAK1-VM3
 # 1. Open Visual Studio 2019, add SSIS data tools from "Extensions | MarketPlace"
 # 1. Ensure Powershell 7 path scripts all work.
 # 1. Add ODBC system connector for EGRPROD
-# 1. Verify 
+# 1. Install lots of packages for VSCODE
 
 
 
