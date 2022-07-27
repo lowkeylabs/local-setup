@@ -24,13 +24,14 @@ if(-not (Test-Administrator))
 Get-Certificate -Template 'VCU-PowershellCodeSigning' -CertStoreLocation "Cert:\currentuser\my"
 
 # Set up important system environment variables
-[Environment]::SetEnvironmentVariable("HOMEIPADDRESS",(get-netipaddress -interfacealias "Ethernet" -AddressFamily "IPv4").IPAddress,"Machine")
+[Environment]::SetEnvironmentVariable("HOMEIPADDRESS",(get-netipaddress -AddressFamily "IPv4" -PrefixOrigin "Dhcp").IPAddress,"Machine")
 $descriptions = @{
-    "EGR-JL-RAK1-SRV" = "Server main"
+    "EGR-JL-RAK1-SRV" = "SRV-Rack VM server"
     "EGR-JL-RAK1-VM1" = "VM1-SQL platform"
     "EGR-JL-RAK1-VM2" = "VM2-Dev platform"
 }
 [Environment]::SetEnvironmentVariable("COMPUTERDESCRIPTION",$descriptions[$env:COMPUTERNAME],"Machine")
+$Env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 
 # Remove app execution alias folder from User Path. This will prevent PYTHON from being overridden.
 $Remove = "$env:localappdata\Microsoft\WindowsApps"
