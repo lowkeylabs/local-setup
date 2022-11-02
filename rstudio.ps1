@@ -1,165 +1,27 @@
-##
-## This script is being called from another PS1 script.
-## More care on global vs local variables is necessary!
+#@echo off
+#REM perl -e "use Cwd; @temp = reverse(split('/',getcwd)); print @temp[0] . '.Rproj'" 
+#for %%a in (%CD%) do set last=%%~na
+#echo Setting default project: %last%.Rproj
+#IF EXIST "%last%.Rproj" (
+#setrtools & setdb & echo "C:\Program Files\RStudio\bin\rstudio.exe" "%last%.Rproj" & "C:\Program Files\RStudio\bin\rstudio.exe" "%last%.Rproj"
+#) ELSE (
+#setrtools & setdb & "C:\Program Files\RStudio\bin\rstudio.exe" %1 %2 %3 %4
+#)
 
-# function to replace UNC portion of drive name with Drive letter from mapped drives (if exists)
-function global:UNCtoDrive( $inputPath )
-{
-$returnValue = $inputPath
-$mappedDrives = @{}
-Get-WmiObject win32_logicaldisk -Filter 'drivetype=4' | Foreach { $mappedDrives.($_.ProviderName) = $_.deviceID }
-$mappedDrives.Keys.ForEach( {if($inputPath.ToLower().contains( ($_).ToLower())) {$returnValue=$mappedDrives[$_]+$InputPath.substring(($_).length)}})
-return $returnValue
+$projectFileName = "$(split-path -Leaf $pwd).Rproj"
+$rstudio = "C:\Program Files\RStudio\bin\rstudio.exe"
+
+if (test-path $projectFileName) {
+  Start-Process -FilePath $rstudio -ArgumentList $projectFileName
+} else {
+  Start-Process -FilePath $rstudio
 }
-
-# function to overload the built-in, default PowerShell prompt
-function global:Prompt
-{
-    $curPath = $ExecutionContext.SessionState.Path.CurrentLocation.Path
-    if ($curPath.ToLower().StartsWith($Home.ToLower()))
-    {
-        $curPath = "~" + $curPath.SubString($Home.Length)
-    }
-    $curPath = $ExecutionContext.SessionState.Path.CurrentLocation.Path
-
-	$env:VIRTUAL_ENV_DISABLE_PROMPT = 1
-	$workOn = ""
-	if ( $env:VIRTUAL_ENV )
-	{
-	    $workOn = "working on ($(split-path $env:VIRTUAL_ENV -leaf))"
-	}
-	
-"
-$curPath $workOn
-PS $('>' * ($nestedPromptLevel + 1)) "
-}
-
-# function to set environment for connections to DB servers using Reporter
-function setEnvDB
-{
-$ENV:ODSPROD_USER="jdleonard"
-$ENV:ODSPROD_PASS="c1uwlESp"
-$ENV:ODSPROD_SID="ODS1"
-$ENV:ODSPROD_DSN="dbi:Oracle:ODSPROD.ODS1"
-
-$ENV:EGRPROD_DSN="dbi:ODBC:EGRPROD"
-$ENV:EGRPROD_SERVER="brighton.vcu.edu"
-$ENV:EGRPROD_DB="EGRDataWarehouse"
-
-$ENV:EGRDEV_DSN="dbi:ODBC:EGRDEV"
-$ENV:EGRDEV_SERVER="bachelor.vcu.edu"
-$ENV:EGRDEV_DB="EGRSandbox"
-
-$ENV:FMI8PROD_DSN="dbi:ODBC:FMI8PROD"
-$ENV:FMI8PROD_SERVER="jacksonhole.vcu.edu"
-$ENV:FMI8PROD_DB="VCU_PROD_FMI8"
-
-$ENV:DICT_DSN="dbi:ODBC:EGRPROD"
-$ENV:DICT_SERVER="brighton.vcu.edu"
-$ENV:DICT_DB="EGRDataWarehouse"
-
-}
-
-# function to set enviroment for use of R tools
-function setRenv
-{
-# Setting environment for RTOOLS
-# Update as versions of RTOOLS and R change
-#
-
-$ENV:R_HOME="H:\VDI\R"
-$ENV:R_ENVIRON_USER="$ENV:R_HOME\.Renviron"
-$ENV:R_PROFILE_USER="$ENV:R_HOME\.Rprofile"
-
-## These change for new versions.  The R_LIBS_USER
-## is set in the .Renviron file
-#
-#$ENV:R_VERSION="3.4.4"
-#$ENV:R_TOOLS="3.4"
-
-$ENV:R_VERSION="4.2.1"
-$R_ROOT = "C:\Program Files\R"
-$ENV:PATH="$ENV:PATH;$R_ROOT\R-$ENV:R_VERSION\bin\x64"
-
-
-$ENV:R_TOOLS="4.0"
-## these should need to change on new versions
-$ENV:R_GCC="mingw_64"
-#$ENV:R_MAX_MEM_SIZE="20G"
-#
-#
-#  Add path for RTOOLS version set in the R_TOOLS variable above
-$ENV:PATH="$ENV:PATH;C:\rtools40\mingw64\bin"
-$ENV:PATH="$ENV:PATH;C:\Program Files\MiKTeX\miktex\bin\x64"
-# 
-#
-#
-#  Add path for Perl
-##$ENV:PERL_VERSION="5.22"
-##$ENV:PATH="$ENV:PATH;$ENV:FINROOT\Perl64\$ENV:PERL_VERSION\site\bin;$ENV:FINROOT\Perl64\$ENV:PERL_VERSION\bin"
-##$ENV:PERL5LIB="$ENV:FINROOT\Perl64\$ENV:PERL_VERSION\site\lib;$ENV:FINROOT\Perl64\$ENV:PERL_VERSION\lib"
-# 
-#
-#  For GIT version control (RTools should be called before GIT)
-#$ENV:PATH="$ENV:PATH;C:\Program Files\Git\cmd;C:\Program Files\Git\bin"
-#
-#  
-##$ENV:SVN_EDITOR="notepad"
-##$ENV:EDITOR="notepad"
-$ENV:CYGWIN="nodosfilewarning"
-##$ENV:R_GSCMD = "C:/Program Files/gs/gs9.05/bin/gswin32c.exe"
-# 
-#  R is available at:  http://cran.r-project.org/bin/windows/base/  (old versions also available)
-#  RTOOLS is available at:  https://cran.r-project.org/bin/windows/Rtools/
-#  RTOOLS must be updated to "match" different versions of R.  See cran for details.
-#  By default RTOOLS doesn't install into version-specific subdirectories. YOU NEED TO DO IT!
-
-$python_version = python --version
-write-host "RTOOLS environment set. R:$ENV:R_VERSION  Rtools:$ENV:R_TOOLS  $python_version"
-}
-
-## main entry point for this Powershell Script
-##
-
-write-host "Windows Powershell - ver."$PSVersionTable.PSVersion.ToString()
-$mypath = $myinvocation.MyCommand.Path
-write-host "Running common profile: $mypath"
-
-
-#
-# Perform machine specific startup stuff
-#
-##if($env:computername -eq "EGR-VDI-004"){
-
-  # set a few helper variables (great for set-location)
-  $profilehome = split-path $profile
-  $egrcodehome = "C:\Users\jdleonard\Projects\vcu-egr-data-warehouse\Integration Services Project1\code"
-
-  #  Add path for conda environment manager
-##  $ENV:ANA3="C:\users\jdleonard\anaconda3"
-##  $ENV:PATH="$ENV:ANA3;$ENV:ANA3\Library\usr\bin;$ENV:ANA3\Library\bin;$ENV:ANA3\Scripts;$ENV:PATH"
-  # 
-
-##}
-
-# fix for "grep -P". Examine "make -d" to find.
-$ENV:LC_ALL = "en_US.utf8"
-
-# Prompt to set up rtools and DB environment as necessary
-#
-#$yesNo = read-host -prompt "Set enviroment for DB and R?"
-#if($yesNo.ToLower() -eq "y"){
-
-setEnvDB
-setRenv
-
-#}
 
 # SIG # Begin signature block
 # MIIcFwYJKoZIhvcNAQcCoIIcCDCCHAQCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUIaJ0CMzQhZ3II+Y5BCBfhPzn
-# W32gggsoMIIFZjCCBE6gAwIBAgITdwACwrL5F2tX4uCXugAAAALCsjANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUWpLaHMnluNnBUVsJAXPbzMaM
+# 20OgggsoMIIFZjCCBE6gAwIBAgITdwACwrL5F2tX4uCXugAAAALCsjANBgkqhkiG
 # 9w0BAQsFADBxMRMwEQYKCZImiZPyLGQBGRYDZWR1MRMwEQYKCZImiZPyLGQBGRYD
 # dmN1MRMwEQYKCZImiZPyLGQBGRYDYWRwMRQwEgYKCZImiZPyLGQBGRYEUkFNUzEa
 # MBgGA1UEAxMRVkNVIEluZm9TZWMgU3ViQ0EwHhcNMjEwOTIwMTQzMjQ2WhcNMjIw
@@ -224,16 +86,16 @@ setRenv
 # VSBJbmZvU2VjIFN1YkNBAhN3AALCsvkXa1fi4Je6AAAAAsKyMAkGBSsOAwIaBQCg
 # eDAYBgorBgEEAYI3AgEMMQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEE
 # AYI3AgEEMBwGCisGAQQBgjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJ
-# BDEWBBR0FgUOfYnD268lFYpGhYYQgrPePjANBgkqhkiG9w0BAQEFAASCAQCamo/8
-# Z8VTWIO9T6eeF/R36YLjUmPwb3sEnDlPdjnxYKT3wKdf8nuAy62cn+vQQlAnm5Bd
-# xdhvRsOlwbKnjTqBufjbiVdfGtx/vkThC5rmicgVkqV9L9jJYimug5b+83qvjQix
-# +C5oScVlI0PCVAYzZpfRvtoLHuRqaODt2plpoG2ap7yfCVoTqN95/QZmBRvi6BH6
-# DiD44PIa0gxzy+4/vxFtfuWMKTXkWS5CJvLQ20TKMh2K/Idyyb2toOte67C8op2Q
-# zwjMP1Cpg229gEC1u3zdnMoTg3C+vF/n4AXcjqsw/sq12kGSohItYtF5qOzMBAlM
-# elLNsd/CYvWovTifoYIOKzCCDicGCisGAQQBgjcDAwExgg4XMIIOEwYJKoZIhvcN
+# BDEWBBSqfU/vGBpmSpPlB1K4TTy775UPejANBgkqhkiG9w0BAQEFAASCAQDSrt8O
+# 6OGlaFAZ6RGHB0XYc5SXHuWmiKht3SpbMeeA4wKLtt2IH2DNUb78MMpsa9ROi8C2
+# X94CYKQIy+fdqCWywseKDyugXC2a4l5ohHsXr0Rq9VuF4vP9+o/hMQMiQRjnAZxO
+# 4V/RWxmoLC2YuYHH40X1hK+HobsJSarXPuM5rjB5razR9zqrks6gHDX/WNgRWGrV
+# E8EzSoqi29nQcaHjO+/rsG7cVnyCgMfCbaSoMHXagB+FTGbtOf2ZXytrYz/n9YGm
+# ib4MVaek9nqqHcECONYzPWht1zyc9Lzn6Q93aeVzMkelu4HaA/4pDuXvAR0E/7Ll
+# FDU7Na0/Q42PiGCAoYIOKzCCDicGCisGAQQBgjcDAwExgg4XMIIOEwYJKoZIhvcN
 # AQcCoIIOBDCCDgACAQMxDTALBglghkgBZQMEAgEwgf4GCyqGSIb3DQEJEAEEoIHu
-# BIHrMIHoAgEBBgtghkgBhvhFAQcXAzAhMAkGBSsOAwIaBQAEFDFaVtUQ3jYGash/
-# vtbeMAmnGta7AhQ4v6jlm3E5ytmrh1KACpVKMSxBMxgPMjAyMjA4MDIxODM0NDZa
+# BIHrMIHoAgEBBgtghkgBhvhFAQcXAzAhMAkGBSsOAwIaBQAEFOXkhtN4aej0Ta5q
+# vHV7uQW3H1f/AhQNCu390sledBg1QJI+AAsCEze/OBgPMjAyMjA4MDMxMTEwMzBa
 # MAMCAR6ggYakgYMwgYAxCzAJBgNVBAYTAlVTMR0wGwYDVQQKExRTeW1hbnRlYyBD
 # b3Jwb3JhdGlvbjEfMB0GA1UECxMWU3ltYW50ZWMgVHJ1c3QgTmV0d29yazExMC8G
 # A1UEAxMoU3ltYW50ZWMgU0hBMjU2IFRpbWVTdGFtcGluZyBTaWduZXIgLSBHM6CC
@@ -297,13 +159,13 @@ setRenv
 # VQQKExRTeW1hbnRlYyBDb3Jwb3JhdGlvbjEfMB0GA1UECxMWU3ltYW50ZWMgVHJ1
 # c3QgTmV0d29yazEoMCYGA1UEAxMfU3ltYW50ZWMgU0hBMjU2IFRpbWVTdGFtcGlu
 # ZyBDQQIQe9Tlr7rMBz+hASMEIkFNEjALBglghkgBZQMEAgGggaQwGgYJKoZIhvcN
-# AQkDMQ0GCyqGSIb3DQEJEAEEMBwGCSqGSIb3DQEJBTEPFw0yMjA4MDIxODM0NDZa
-# MC8GCSqGSIb3DQEJBDEiBCAjgMVzlW6kT6DokZcJ/DKljVg3bBlAxO2OSLTJL3eo
-# XjA3BgsqhkiG9w0BCRACLzEoMCYwJDAiBCDEdM52AH0COU4NpeTefBTGgPniggE8
-# /vZT7123H99h+DALBgkqhkiG9w0BAQEEggEApyAgYK7Slq5uz0v1jJ8/b/gvdYOZ
-# Mmmvzof9EyFxYXSwu8I0EW7veGJ76GTCs09nK9IAx4FwthYP1ATkvjmjV03hzxl/
-# 7nycEJHlKnM0MlLKRiH1S+4tiBBy9B9dPN6qUO4++ahIiFXUHpHt/6Lf32PKBQkB
-# 79h+/2MZRGxLVdweCb81RVc9DtZr2ThQAy6f2W3pg3tqMQxhWlK/bQRzxxrkauVk
-# YT09KJ8+rXmEQe0eQyFdaQkSNMhxY+yrWpMw2kKlcK5MZE1GxIrTdXkELSJ568kw
-# R8M+duqKVtKZgO59nxK3AtCgzEsRk03LzfFLlxDXKaNXYXP93FzS3pdYcw==
+# AQkDMQ0GCyqGSIb3DQEJEAEEMBwGCSqGSIb3DQEJBTEPFw0yMjA4MDMxMTEwMzBa
+# MC8GCSqGSIb3DQEJBDEiBCCXAD7awoS/fMI2QLLGnOE+hU9J7fZHhmC2qxGZrS0C
+# RjA3BgsqhkiG9w0BCRACLzEoMCYwJDAiBCDEdM52AH0COU4NpeTefBTGgPniggE8
+# /vZT7123H99h+DALBgkqhkiG9w0BAQEEggEAGr2EGJTY9QcZYrYbvFWKZAQQi/07
+# 79CPX7SSVJhhNMJe/z7bCXaBpy6qOPijknPsUomVZBI7p+XQDLmC+f4o4PRaITAC
+# jOYbVRi42L6sUqLA+M9vdzE/EdfQ+1fkolhc/9SkZMqYUrp67L+0wKcUDSfVgriK
+# mx2v0FfohZYc4t3ThLo8Gelocf1pyEfqqk4gL3LMPnmWDbb4OtbV4Wn/Qd/C5m7C
+# hwgE65py2haGyxbUKZLoFwSZuoN3JFcKsQCsFZoGgrzCXIr5c2qHkaOfg55Js+F6
+# gioRWt63zARuNMUpy50e0qDeKN9ffhx3ra4OfdJvSvRcRdlUMSEXSPQarg==
 # SIG # End signature block
