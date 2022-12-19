@@ -73,7 +73,7 @@ public class Params
     $ret = [Params]::SystemParametersInfo($SPI_SETDESKWALLPAPER, 0, $Image, $fWinIni)
 }
  
-Set-WallPaper -Image "C:\Users\jdleonard\Projects\local-setup\backgroundDefault.jpg" -Style Fit
+Set-WallPaper -Image "$env:USERPROFILE\.my-setup\backgroundDefault.jpg" -Style Fit
 
 
 # SIG # Begin signature block
