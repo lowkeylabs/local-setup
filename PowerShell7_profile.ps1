@@ -153,6 +153,10 @@ $ENV:LC_ALL = "en_US.utf8"
 setEnvDB
 setRenv
 
+# Quarto setup
+
+$env:QUARTO_PYTHON=$(pyenv which python3)
+
 #}
 
 # SIG # Begin signature block
