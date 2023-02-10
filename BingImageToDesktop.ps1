@@ -1,8 +1,8 @@
 
 #Location to store original image 
-    $saveLocation = $env:USERPROFILE+'\.my-setup\backgroundDefault.jpg'
+    $saveLocation = $env:USERPROFILE+'\.mysetup\backgroundDefault.jpg'
 #Location to store image with title added to it. Group Policy should point to this image.
-    $saveLocationWithDescriptionAdded = $env:USERPROFILE+'\.my-setup\backgroundDefault1.jpg'
+    $saveLocationWithDescriptionAdded = $env:USERPROFILE+'\.mysetup\backgroundDefault1.jpg'
  
 #Height From Bottom in Pixels. This controls how far up from the bottom that the next is written. Should not be lower than 21. Set to 75 for the text to appear above taskbar if used as desktop background.
     $HeightfromBottom = 50

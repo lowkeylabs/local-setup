@@ -1,9 +1,9 @@
 write-output "Downloading image"
-~\.my-setup\BingImageToDesktop.ps1
+~\.mysetup\BingImageToDesktop.ps1
 write-output "Setting Wallpaper"
-~\.my-setup\SetWallPaper.ps1
+~\.mysetup\SetWallPaper.ps1
 write-output "Writing BG info"
-~\.my-setup\BGinfo.ps1
+~\.mysetup\BGinfo.ps1
 
 # SIG # Begin signature block
 # MIIcjgYJKoZIhvcNAQcCoIIcfzCCHHsCAQExDzANBglghkgBZQMEAgEFADB5Bgor
