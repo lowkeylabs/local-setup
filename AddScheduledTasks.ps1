@@ -1,15 +1,36 @@
-write-output "Downloading image"
-~\.mysetup\BingImageToDesktop.ps1
-write-output "Setting Wallpaper"
-~\.mysetup\SetWallPaper.ps1
-write-output "Writing BG info"
-~\.mysetup\BGinfo.ps1
+# This script must be run from admin shell
+# Shell can be wither PS5 or PS7
+#
+# jdleonard 3/30/2023
+
+
+$stateChangeTrigger = Get-CimClass `
+    -Namespace ROOT\Microsoft\Windows\TaskScheduler `
+    -ClassName MSFT_TaskSessionStateChangeTrigger
+
+$onUnlockTrigger = New-CimInstance `
+    -CimClass $stateChangeTrigger `
+    -Property @{
+        StateChange = 8  # TASK_SESSION_STATE_CHANGE_TYPE.TASK_SESSION_UNLOCK (taskschd.h)
+    } `
+    -ClientOnly
+
+$action = new-ScheduledTaskAction `
+    -Execute "C:\Program Files\PowerShell\7\pwsh.exe" `
+    -Argument "C:\Users\jdleonard\.mysetup\onUnlockScript.ps1" 
+
+Register-ScheduledTask `
+    -TaskName "_onUnlockScript" `
+    -Description "Execute .mysetup/onUnlockScript.ps1 on workstation unlocks" `
+    -Action $action `
+    -Trigger $onUnlockTrigger
+
 
 # SIG # Begin signature block
 # MIIcagYJKoZIhvcNAQcCoIIcWzCCHFcCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUhQMPeeBGOcSDOx3tjsUqCPfL
-# Dn2gggt6MIIFuDCCBKCgAwIBAgITdwADHyGEzSvvnOHjlQAAAAMfITANBgkqhkiG
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU3PCbQZpcSjrQ4qRf/y8zn8RN
+# TAygggt6MIIFuDCCBKCgAwIBAgITdwADHyGEzSvvnOHjlQAAAAMfITANBgkqhkiG
 # 9w0BAQsFADBxMRMwEQYKCZImiZPyLGQBGRYDZWR1MRMwEQYKCZImiZPyLGQBGRYD
 # dmN1MRMwEQYKCZImiZPyLGQBGRYDYWRwMRQwEgYKCZImiZPyLGQBGRYEUkFNUzEa
 # MBgGA1UEAxMRVkNVIEluZm9TZWMgU3ViQ0EwHhcNMjIxMjE0MTI1NDA1WhcNMjMx
@@ -75,17 +96,17 @@ write-output "Writing BG info"
 # FDASBgoJkiaJk/IsZAEZFgRSQU1TMRowGAYDVQQDExFWQ1UgSW5mb1NlYyBTdWJD
 # QQITdwADHyGEzSvvnOHjlQAAAAMfITAJBgUrDgMCGgUAoHgwGAYKKwYBBAGCNwIB
 # DDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYKKwYBBAGCNwIBBDAcBgorBgEE
-# AYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG9w0BCQQxFgQUl5KEILc4EK36
-# suclS9CHueiTHAowDQYJKoZIhvcNAQEBBQAEggEAPR9bKP/HsyAgq8ZU4+220O+V
-# O4yoocEhXh5Jp2pRrCbqol3+zHChKElXy5QnrYuVRXV+bAiVUSljeG8uOyc7gO0f
-# wTth+2+4kaeQmslYT0DSNX3KARC5An4G3F/fnt254MjTbCFeEZyHGNk6HJ8tH/F4
-# xu2KLadjuGinmJSrA1VF7GEaqCQcyei/ZVxlRQa3chvr0DokQT8t1ZXSAJXle4K4
-# ZnBg238n5ah47wvXc1ViDLuJWoxOqpgjAsyvhwxHFsUIwpDBZLBxowRn0l4j+7Js
-# Ft3WA8ye4g3s2lbA6y7YQHKp6JUiDczl0qmZt3XwrR1h80xliQOxn35DxcbY8KGC
+# AYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG9w0BCQQxFgQUCjABMbP5pVOe
+# EGN7mQrYLipCO1cwDQYJKoZIhvcNAQEBBQAEggEAWxvJgMc9NE85e9AZs8U6HhO1
+# RvmAU0G64lPGPFUB01B4lnMopbeNmut4TGg74zfxnQhyNF/52qPswK4MbeNsoMCB
+# bOcQjs1aGKDCFd4wMMxlZe+yonyrX1mlinaFLRHMazh+j6oeaPNb8IDCdKXlxeXz
+# 1r2hplnvZuIu3DfxW3Kz2fkWjZ9DFu+uRAoFZIElT7pRna7yUstue88mVHSGBHpn
+# kHafE1v6riQCRdGkoJM9TnWLRl/ketgy29zdbYFnzq7dKj0RBUPW+ZjAal6lhd8r
+# J1EWkEjLF5BFEBizokyzhMVMbylWU2VRCONhG8pl9ZwxNQllpR0quSOkVwX08aGC
 # Diwwgg4oBgorBgEEAYI3AwMBMYIOGDCCDhQGCSqGSIb3DQEHAqCCDgUwgg4BAgED
 # MQ0wCwYJYIZIAWUDBAIBMIH/BgsqhkiG9w0BCRABBKCB7wSB7DCB6QIBAQYLYIZI
-# AYb4RQEHFwMwITAJBgUrDgMCGgUABBR8DSoMHukatfy/IVnt52wa2j5ySAIVAOgS
-# O9k3otIGJCLa/F21tosrwqMwGA8yMDIzMDMyMTExMTUyOFowAwIBHqCBhqSBgzCB
+# AYb4RQEHFwMwITAJBgUrDgMCGgUABBTFu81YDgK2ofJpJE6MD3WtIqHEGAIVAOn/
+# dN0ugf6OBmaiZ2OZoJT7ub9kGA8yMDIzMDMzMDEyMzMxM1owAwIBHqCBhqSBgzCB
 # gDELMAkGA1UEBhMCVVMxHTAbBgNVBAoTFFN5bWFudGVjIENvcnBvcmF0aW9uMR8w
 # HQYDVQQLExZTeW1hbnRlYyBUcnVzdCBOZXR3b3JrMTEwLwYDVQQDEyhTeW1hbnRl
 # YyBTSEEyNTYgVGltZVN0YW1waW5nIFNpZ25lciAtIEczoIIKizCCBTgwggQgoAMC
@@ -149,13 +170,13 @@ write-output "Writing BG info"
 # IENvcnBvcmF0aW9uMR8wHQYDVQQLExZTeW1hbnRlYyBUcnVzdCBOZXR3b3JrMSgw
 # JgYDVQQDEx9TeW1hbnRlYyBTSEEyNTYgVGltZVN0YW1waW5nIENBAhB71OWvuswH
 # P6EBIwQiQU0SMAsGCWCGSAFlAwQCAaCBpDAaBgkqhkiG9w0BCQMxDQYLKoZIhvcN
-# AQkQAQQwHAYJKoZIhvcNAQkFMQ8XDTIzMDMyMTExMTUyOFowLwYJKoZIhvcNAQkE
-# MSIEIO9XL4+oRj6sxfWbSRyUkzdTbvxIOrmpgqqySnWu4yF4MDcGCyqGSIb3DQEJ
+# AQkQAQQwHAYJKoZIhvcNAQkFMQ8XDTIzMDMzMDEyMzMxM1owLwYJKoZIhvcNAQkE
+# MSIEIE2fUpjYFPdr69PO+cFKgK0MBZwoI49M4Y4nPZCcMAFMMDcGCyqGSIb3DQEJ
 # EAIvMSgwJjAkMCIEIMR0znYAfQI5Tg2l5N58FMaA+eKCATz+9lPvXbcf32H4MAsG
-# CSqGSIb3DQEBAQSCAQCA17P4XTO7vm1CuD/BvvmU3wkD9HE2EVrfyFDhOOD9lGkM
-# 8tFqgLl8QrBKQTnbtN7xqnRRbWnG24RMOIW4xLZRGFBPDTCARDOR51rcUP7TyVWy
-# fQgswZqKQCEFhEQ/Y8XdwYpnkn5ht4i4aUetDbL2rOnejGxx6tgcmowMVAuSZ1GA
-# HEhRf820dbCVSYVIME2HarYWlV2TCx+1yzWYh9xklhkIim+vKdPflyjgShkzmhlS
-# 2AHzowZkYFCUJ7hDA9vf5B6GvLzQsIsMVdcXHppXQaLeWhq9eRrOSa6uKbrzfK66
-# X/6ffjwHWmMsg5nW9yedJIh2xI4HBrH1DbnQMFeN
+# CSqGSIb3DQEBAQSCAQB7/5W5r3HUFhtBq1k/O+kjyvnlmSKW1x7z/T4CXPnxyPwK
+# JXP8M2VXPhzzHxX1w4/LcLvROqsCPSjcVGNSFSqXIQp0wR9s/CGpEIHsdIN5IY3X
+# Of0kNpUGUEUt5QnOM+9P1FUp/N2Mnpv+XjRA2R/hqpwp8g9yK73QJmVuP47n7p3O
+# H3dnaF78YlBB26O6lNGuKBULZ07qcviE/JmGvPDGX6iqd8R/m4+7ztmhjr421Xs8
+# uUAYe3sHHqDdvLgnU7agsP27P4stjZne3/9vx0Y20JUASFzckxyc2iugIXl2gJ6R
+# 0dNmYCBZ1hQuZ3cLh5VOMd1fzBXmuB4CjpjcGTKJ
 # SIG # End signature block
