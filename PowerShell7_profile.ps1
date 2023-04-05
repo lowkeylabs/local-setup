@@ -153,9 +153,11 @@ $ENV:LC_ALL = "en_US.utf8"
 setEnvDB
 setRenv
 
-# Quarto setup
+# Quarto and Poetry setup
 
 $env:QUARTO_PYTHON=$(pyenv which python3)
+$ENV:PATH="$ENV:PATH;$ENV:APPDATA\Python\Scripts"
+
 
 #}
 
