@@ -9,4 +9,4 @@ if ($env:COMPUTERNAME -in $vcu_computers) {
 
 ~\.mysetup\FreshenWallpaper.ps1
 
-read-host "pausing ..."
+## read-host "pausing ..."

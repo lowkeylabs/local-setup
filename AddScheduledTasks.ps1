@@ -3,6 +3,23 @@
 #
 # jdleonard 3/30/2023
 
+# Code that may generate "Access is denied" error
+
+$userprofile = $ENV:USERPROFILE
+$vcucomputers = @('EGR-JL-RAK1-SRV','EGR-JL-DSK0-SRV')
+if ($ENV:COMPUTERNAME -in $vcucomputers){
+    $userprofile = "C:\Users\jdleonard"
+    write-host "Setting userprofile to: $userprofile"
+}
+
+$authmessage = @"
+*** Run this script from admin shell!
+*** If you're using VCU elevated accounts, you may need to update the userprofile name
+*** at the top of the script to update the correct user.
+
+userprofile: $userprofile
+computername: $ENV:COMPUTERNAME
+"@
 
 $stateChangeTrigger = Get-CimClass `
     -Namespace ROOT\Microsoft\Windows\TaskScheduler `
@@ -17,13 +34,46 @@ $onUnlockTrigger = New-CimInstance `
 
 $action = new-ScheduledTaskAction `
     -Execute "C:\Program Files\PowerShell\7\pwsh.exe" `
-    -Argument "$ENV:USERPROFILE\.mysetup\onUnlockScript.ps1" 
+    -Argument "$userprofile\.mysetup\onUnlockScript.ps1"
 
-Register-ScheduledTask `
+Try {
+    $returnString = Unregister-ScheduledTask `
     -TaskName "_onUnlockScript" `
+    -ErrorAction stop `
+    -Confirm:$false
+    write-host "Old _onUnlockScript removed."
+}
+catch {
+
+    if ($($_.Exception.Message) -like "*Access is denied*") {
+        write-host $authmessage
+        exit 1
+    }
+    if ($($_.Exception.Message) -like "*No MSFT_ScheduledTask*"){
+        write-host "_onUnlockScript not found. Proceeding."
+    } else {
+       write-host "An error occurred: $($_.Exception.Message)"
+       exit 1
+    }
+
+}
+
+Try {
+    $returnstring = Register-ScheduledTask `
+    -TaskName "_onUnlockScript" `
+    -ErrorAction stop `
     -Description "Execute .mysetup/onUnlockScript.ps1 on workstation unlocks" `
     -Action $action `
     -Trigger $onUnlockTrigger
+    write-host "Registering _onUnlockScript"
+}
+Catch {
+    if ($($_.Exception.Message) -like "*Access is denied*") {
+        write-host $authmessage
+        exit 1
+    }
+    write-host "An error occurred: $($_.Exception.Message)"
+}
 
 
 # SIG # Begin signature block
