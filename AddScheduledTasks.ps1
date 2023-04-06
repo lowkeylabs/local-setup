@@ -17,7 +17,7 @@ $onUnlockTrigger = New-CimInstance `
 
 $action = new-ScheduledTaskAction `
     -Execute "C:\Program Files\PowerShell\7\pwsh.exe" `
-    -Argument "C:\Users\jdleonard\.mysetup\onUnlockScript.ps1" 
+    -Argument "$ENV:USERPROFILE\.mysetup\onUnlockScript.ps1" 
 
 Register-ScheduledTask `
     -TaskName "_onUnlockScript" `
