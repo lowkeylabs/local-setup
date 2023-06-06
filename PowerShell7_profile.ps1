@@ -155,7 +155,7 @@ setRenv
 
 # Quarto and Poetry setup
 
-$env:QUARTO_PYTHON=$(pyenv which python3)
+$env:QUARTO_PYTHON=$(pyenv which python)
 $ENV:PATH="$ENV:PATH;$ENV:APPDATA\Python\Scripts"
 $ENV:PATH="$ENV:PATH;C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn"
 
