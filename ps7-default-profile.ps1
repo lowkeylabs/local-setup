@@ -1,173 +1,27 @@
-##
-## This script is being called from another PS1 script.
-## More care on global vs local variables is necessary!
-
-# function to replace UNC portion of drive name with Drive letter from mapped drives (if exists)
-function global:UNCtoDrive( $inputPath )
-{
-$returnValue = $inputPath
-$mappedDrives = @{}
-Get-WmiObject win32_logicaldisk -Filter 'drivetype=4' | Foreach { $mappedDrives.($_.ProviderName) = $_.deviceID }
-$mappedDrives.Keys.ForEach( {if($inputPath.ToLower().contains( ($_).ToLower())) {$returnValue=$mappedDrives[$_]+$InputPath.substring(($_).length)}})
-return $returnValue
-}
-
-# function to overload the built-in, default PowerShell prompt
-function global:Prompt
-{
-    $curPath = $ExecutionContext.SessionState.Path.CurrentLocation.Path
-    if ($curPath.ToLower().StartsWith($Home.ToLower()))
-    {
-        $curPath = "~" + $curPath.SubString($Home.Length)
-    }
-    $curPath = $ExecutionContext.SessionState.Path.CurrentLocation.Path
-
-	$env:VIRTUAL_ENV_DISABLE_PROMPT = 1
-	$workOn = ""
-	if ( $env:VIRTUAL_ENV )
-	{
-	    $workOn = "working on ($(split-path $env:VIRTUAL_ENV -leaf))"
-	}
-	
-"
-$curPath $workOn
-PS $('>' * ($nestedPromptLevel + 1)) "
-}
-
-# function to set environment for connections to DB servers using Reporter
-function setEnvDB
-{
-$ENV:ODSPROD_USER="jdleonard"
-$ENV:ODSPROD_PASS="c1uwlESp"
-$ENV:ODSPROD_SID="ODS1"
-$ENV:ODSPROD_DSN="dbi:Oracle:ODSPROD.ODS1"
-
-$ENV:EGRPROD_DSN="dbi:ODBC:EGRPROD"
-$ENV:EGRPROD_SERVER="brighton.vcu.edu"
-$ENV:EGRPROD_DB="EGRDataWarehouse"
-
-$ENV:EGRDEV_DSN="dbi:ODBC:EGRDEV"
-$ENV:EGRDEV_SERVER="bachelor.vcu.edu"
-$ENV:EGRDEV_DB="EGRSandbox"
-
-$ENV:FMI8PROD_DSN="dbi:ODBC:FMI8PROD"
-$ENV:FMI8PROD_SERVER="jacksonhole.vcu.edu"
-$ENV:FMI8PROD_DB="VCU_PROD_FMI8"
-
-$ENV:DICT_DSN="dbi:ODBC:EGRPROD"
-$ENV:DICT_SERVER="brighton.vcu.edu"
-$ENV:DICT_DB="EGRDataWarehouse"
-
-}
-
-# function to set enviroment for use of R tools
-function setRenv
-{
-# Setting environment for RTOOLS
-# Update as versions of RTOOLS and R change
 #
-
-$ENV:R_HOME="H:\VDI\R"
-$ENV:R_ENVIRON_USER="$ENV:R_HOME\.Renviron"
-$ENV:R_PROFILE_USER="$ENV:R_HOME\.Rprofile"
-
-## These change for new versions.  The R_LIBS_USER
-## is set in the .Renviron file
+# Set up FinReports environment
 #
-#$ENV:R_VERSION="3.4.4"
-#$ENV:R_TOOLS="3.4"
+##$SharedProfile= "C:\FinReports\Startup\FinReports_PowerShell_profile.ps1"
+##&$SharedProfile
 
-$ENV:R_VERSION="4.2.1"
-$R_ROOT = "C:\Program Files\R"
-$ENV:PATH="$ENV:PATH;$R_ROOT\R-$ENV:R_VERSION\bin\x64"
+## show all profiles available
+##$PROFILE | select-object *
 
+<#
+## Write name of current file being executed.
+write-host $MyInvocation.MyCommand.Path
+write-host $MyInvocation.MyCommand.Name
+#>
 
-$ENV:R_TOOLS="4.0"
-## these should need to change on new versions
-$ENV:R_GCC="mingw_64"
-#$ENV:R_MAX_MEM_SIZE="20G"
-#
-#
-#  Add path for RTOOLS version set in the R_TOOLS variable above
-$ENV:PATH="$ENV:PATH;C:\rtools40\mingw64\bin"
-$ENV:PATH="$ENV:PATH;C:\Program Files\MiKTeX\miktex\bin\x64"
-# 
-#
-#
-#  Add path for Perl
-##$ENV:PERL_VERSION="5.22"
-##$ENV:PATH="$ENV:PATH;$ENV:FINROOT\Perl64\$ENV:PERL_VERSION\site\bin;$ENV:FINROOT\Perl64\$ENV:PERL_VERSION\bin"
-##$ENV:PERL5LIB="$ENV:FINROOT\Perl64\$ENV:PERL_VERSION\site\lib;$ENV:FINROOT\Perl64\$ENV:PERL_VERSION\lib"
-# 
-#
-#  For GIT version control (RTools should be called before GIT)
-#$ENV:PATH="$ENV:PATH;C:\Program Files\Git\cmd;C:\Program Files\Git\bin"
-#
-#  
-##$ENV:SVN_EDITOR="notepad"
-##$ENV:EDITOR="notepad"
-$ENV:CYGWIN="nodosfilewarning"
-##$ENV:R_GSCMD = "C:/Program Files/gs/gs9.05/bin/gswin32c.exe"
-# 
-#  R is available at:  http://cran.r-project.org/bin/windows/base/  (old versions also available)
-#  RTOOLS is available at:  https://cran.r-project.org/bin/windows/Rtools/
-#  RTOOLS must be updated to "match" different versions of R.  See cran for details.
-#  By default RTOOLS doesn't install into version-specific subdirectories. YOU NEED TO DO IT!
+$common_profile = "C:\Users\jdleonard\.mysetup\PowerShell7_profile.ps1"
+&$common_profile
 
-$python_version = python --version
-write-host "RTOOLS environment set. R:$ENV:R_VERSION  Rtools:$ENV:R_TOOLS  $python_version"
-}
-
-## main entry point for this Powershell Script
-##
-
-write-host "Windows Powershell - ver."$PSVersionTable.PSVersion.ToString()
-$mypath = $myinvocation.MyCommand.Path
-write-host "Running common profile: $mypath"
-
-
-#
-# Perform machine specific startup stuff
-#
-##if($env:computername -eq "EGR-VDI-004"){
-
-  # set a few helper variables (great for set-location)
-  $profilehome = split-path $profile
-  $egrcodehome = "C:\Users\jdleonard\Projects\vcu-egr-data-warehouse\Integration Services Project1\code"
-
-  #  Add path for conda environment manager
-##  $ENV:ANA3="C:\users\jdleonard\anaconda3"
-##  $ENV:PATH="$ENV:ANA3;$ENV:ANA3\Library\usr\bin;$ENV:ANA3\Library\bin;$ENV:ANA3\Scripts;$ENV:PATH"
-  # 
-
-##}
-
-# fix for "grep -P". Examine "make -d" to find.
-$ENV:LC_ALL = "en_US.utf8"
-
-# Prompt to set up rtools and DB environment as necessary
-#
-#$yesNo = read-host -prompt "Set enviroment for DB and R?"
-#if($yesNo.ToLower() -eq "y"){
-
-setEnvDB
-setRenv
-
-# Quarto and Poetry setup
-
-$env:QUARTO_PYTHON=$(pyenv which python3)
-$ENV:PATH="$ENV:PATH;$ENV:APPDATA\Python\Scripts"
-$ENV:PATH="$ENV:PATH;C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn"
-
-oh-my-posh init powershell | Invoke-Expression
-
-#}
 
 # SIG # Begin signature block
 # MIIcjwYJKoZIhvcNAQcCoIIcgDCCHHwCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCBHEJCzfhIJvEPN
-# OkkO9S/kIFdTtCvVO799/JUXlVAMkKCCC3owggW4MIIEoKADAgECAhN3AAMfIYTN
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCkEd4SGqpnqiey
+# Yu0V3yeOhYp/m12+BmCWvDk+7EYYA6CCC3owggW4MIIEoKADAgECAhN3AAMfIYTN
 # K++c4eOVAAAAAx8hMA0GCSqGSIb3DQEBCwUAMHExEzARBgoJkiaJk/IsZAEZFgNl
 # ZHUxEzARBgoJkiaJk/IsZAEZFgN2Y3UxEzARBgoJkiaJk/IsZAEZFgNhZHAxFDAS
 # BgoJkiaJk/IsZAEZFgRSQU1TMRowGAYDVQQDExFWQ1UgSW5mb1NlYyBTdWJDQTAe
@@ -234,17 +88,17 @@ oh-my-posh init powershell | Invoke-Expression
 # BAMTEVZDVSBJbmZvU2VjIFN1YkNBAhN3AAMfIYTNK++c4eOVAAAAAx8hMA0GCWCG
 # SAFlAwQCAQUAoIGEMBgGCisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcN
 # AQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUw
-# LwYJKoZIhvcNAQkEMSIEIL1rj+JkB8Ti80j7KVuxEmvzsVQU1h/oYdccbpKbOlNx
-# MA0GCSqGSIb3DQEBAQUABIIBAIDT2UdC6VOgBUjhPFMX9C7YxRTMvxbi0IpEouGh
-# zyJavEXUnvtt+++azVaFfOLMU1x9CPIpENAPf98FQd86zrr6NwU4v8TJtELe/D6r
-# BvYEbnQ69WRi6wO6fSd90drcpNPng8pNkuW2Rj/5BMpEOymqAAkT/wESARfjxs93
-# w9CVAdHfFEdhfUJFH+lplZ607TvFK/EGNS0WOxlLXPflBxsGa0ftoHYO6Za0KO6X
-# FwCxIBmQIxql0d50hytpiJZnKYP0ihUoq7n21E6CLR4Z2Rx21TBpuPda1mxr/e8u
-# dbW8SGXIQEFWkHNNzF5lkYThn4SKcAzdlznBuikQ3fh8vKWhgg4sMIIOKAYKKwYB
+# LwYJKoZIhvcNAQkEMSIEIB5Bf5SQXQRKJd+F6GVNEyFV4hIEcu5T3b/93H6/lFWi
+# MA0GCSqGSIb3DQEBAQUABIIBAC2CTUIztW7xbHyBjLGvKwyLszWMKUObv+q9ho2a
+# aCHjUZGf2eHmZWICvj3v1JgZpjhd4Cb/Uc2csN3HemWbMtGAvBgVCxA3tvNYvBfO
+# sPhuMmo5zcd0SdjtxcE/OJ4xa+u1mXSKBHoYk6/3sKj0tdloOYcR9HkfoNBjE31q
+# pjfBGnVGcpglMYtWWO9Y3nKo/8mJwyOQEQ/94tblEq+yPCV8Ji+ulv8dy5PtupQM
+# 9S2I4iIXiK0AA2dA/faJB+q2INFSi0yk9eDe3zMIeCxvzUV42UH70f1pLF+aX9mi
+# Wq972yKsblSwPeindmbidxZioYfSQj/KXtyzGj2bAzSqwMehgg4sMIIOKAYKKwYB
 # BAGCNwMDATGCDhgwgg4UBgkqhkiG9w0BBwKggg4FMIIOAQIBAzENMAsGCWCGSAFl
 # AwQCATCB/wYLKoZIhvcNAQkQAQSgge8EgewwgekCAQEGC2CGSAGG+EUBBxcDMCEw
-# CQYFKw4DAhoFAAQUbFethzNt2yb0HM3rSVN9EMh+uTACFQC+Mo9lokavyKjMR+ox
-# UGYNQE1AsxgPMjAyMzA2MDYxOTAwMjJaMAMCAR6ggYakgYMwgYAxCzAJBgNVBAYT
+# CQYFKw4DAhoFAAQUrQCFaNgO2A2srPA/l7rHRUajsAsCFQCKCnr7u3+mbenYGl+l
+# NflWBg/BYhgPMjAyMzA0MDQxMTU1MTFaMAMCAR6ggYakgYMwgYAxCzAJBgNVBAYT
 # AlVTMR0wGwYDVQQKExRTeW1hbnRlYyBDb3Jwb3JhdGlvbjEfMB0GA1UECxMWU3lt
 # YW50ZWMgVHJ1c3QgTmV0d29yazExMC8GA1UEAxMoU3ltYW50ZWMgU0hBMjU2IFRp
 # bWVTdGFtcGluZyBTaWduZXIgLSBHM6CCCoswggU4MIIEIKADAgECAhB7BbHUSWhR
@@ -308,13 +162,13 @@ oh-my-posh init powershell | Invoke-Expression
 # bjEfMB0GA1UECxMWU3ltYW50ZWMgVHJ1c3QgTmV0d29yazEoMCYGA1UEAxMfU3lt
 # YW50ZWMgU0hBMjU2IFRpbWVTdGFtcGluZyBDQQIQe9Tlr7rMBz+hASMEIkFNEjAL
 # BglghkgBZQMEAgGggaQwGgYJKoZIhvcNAQkDMQ0GCyqGSIb3DQEJEAEEMBwGCSqG
-# SIb3DQEJBTEPFw0yMzA2MDYxOTAwMjJaMC8GCSqGSIb3DQEJBDEiBCDb9frUdw57
-# SIEDa3vJNnrtz7ug8uyj5PAn6NUd5sMdtjA3BgsqhkiG9w0BCRACLzEoMCYwJDAi
+# SIb3DQEJBTEPFw0yMzA0MDQxMTU1MTFaMC8GCSqGSIb3DQEJBDEiBCCLljgYx1KP
+# x+5aX1DskmzqKyoUUv4AzRwrmUH5uezUrzA3BgsqhkiG9w0BCRACLzEoMCYwJDAi
 # BCDEdM52AH0COU4NpeTefBTGgPniggE8/vZT7123H99h+DALBgkqhkiG9w0BAQEE
-# ggEAQm+uJJNsvOp6VjhoVUOr9KtBKUAQNypYZEKFsUeM8g4vsqGaqvkmg8R8uZVz
-# NYUcPb8SiqE/mCyUBbhdoOpYttN3bEj3nRZd54SGthw/YrUAfUue+fmeLwYR/ZVM
-# YH/POG5Xi2kyGJMOgUEPkW90hsiWb6p/LbnjQiRGGvfmtGanTPShMQ8vGHQZk24j
-# 6hXVTGRyl4i8C1wYJbO0D0PZpergPgF7wgKmI3AcM3wx5ifs8YEHr2bxbfOaXu/P
-# N52X2DloPcxg816aH/fB3SqAlrN7PZFLA/U7KwiNdS7Pz+N42ZlFiaD6f3qrOZWa
-# pdjMHhFf4RnQuZaH8CzhP/yrvg==
+# ggEAUPwB/6B5U/KEhuczyR1Os+F5iGAYClaieFqB/KjlKP94Rzcq+luGwlrBL5We
+# yWlGcjRfeU14UJYAQHjNORBuC+5MCAjg2rhDoNjeqoci38kyZoP+80xhOi5YrKrJ
+# +DDNwgVgfu69iyHZR3nG8jUqqK4tR2tarGiJ0VCHLrtm8IyAu3ppgKEqYHD2d/9T
+# vlonrL4Ia5tHqQVaBWsuYC70g+Q+8ye7EZz6TlpEwVG0TO8+8kWJ7VY/MBwIjmyk
+# K9Z4HNgPobqXri8vWNYbQVNN4QHsOlAU8Y5V0qQrEf5YXXqmOsh8L/ektfSMpvjj
+# r2jNfHitlE++mUa9WWzIP2VZHA==
 # SIG # End signature block
