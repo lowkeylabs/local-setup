@@ -159,7 +159,7 @@ $env:QUARTO_PYTHON=$(pyenv which python)
 $ENV:PATH="$ENV:PATH;$ENV:APPDATA\Python\Scripts"
 $ENV:PATH="$ENV:PATH;C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn"
 
-oh-my-posh init powershell | Invoke-Expression
+oh-my-posh init powershell --config "$env:USERPROFILE\.mysetup\jandedobbeleer.omp.json" | Invoke-Expression
 
 #}
 
