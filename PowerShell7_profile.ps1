@@ -156,6 +156,14 @@ setRenv
 # Quarto and Poetry setup
 
 $env:QUARTO_PYTHON=$(pyenv which python)
+if ($env:VIRTUAL_ENV -ne $null) {
+  Write-Output Setting QUARTO_PYTHON for VIRTUAL_ENV
+  # The environment variable VIRTUAL_ENV exists
+  # Run your code here for when it exists
+  $env:QUARTO_PYTHON=$(poetry env info -e)  
+}
+
+
 $ENV:PATH="$ENV:PATH;$ENV:APPDATA\Python\Scripts"
 $ENV:PATH="$ENV:PATH;C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn"
 
