@@ -28,31 +28,43 @@
     Date: 8/14/2023
     Version: 1.0
 
+    Added new QUARTO section
+    Date: 11/3/2023
+    Version: 1.1
+
 .LINK
     None
 
 #>
 
-echo "Running profile: $PROFILE"
+write-output "Running profile: $PROFILE"
 
-# Quarto environment settings
-$env:QUARTO_PYTHON=$(pyenv which python)  # to work with pyenv
-if ($env:VIRTUAL_ENV -ne $null) {
-  Write-Output "Setting QUARTO_PYTHON for Poetry VENV"
-  $env:QUARTO_PYTHON=$(poetry env info -e)  
-}
-
+# These settings disable annoying quarto messages
 $env:DENO_NO_UPDATE_CHECK=1               # to warning about deno upgrades
 $env:DENO_TLS_CA_STORE="system"           # to stop the BAD CERTIFICATE deno warning
 $env:PYDEVD_DISABLE_FILE_VALIDATION=1     # for Python 3.11 above, to disable warning message RE: debugging
+$env:VIRTUAL_ENV_DISABLE_PROMPT=1         # set to 1 to disable venv prompt change
 
+# This code ensures Quarto finds the correct python from pyenv or poetry if a venv exists.
+$env:QUARTO_PYTHON=$(pyenv which python)  # to work with pyenv global or local python
+$pythonPoetryPath = $(poetry env info -e 2> $null)
+if ($pythonPoetryPath -ne $null) {
+  # extract the venv name from the python poetry path
+  $venvName = Split-Path -Path $pythonPoetryPath -Parent | Split-Path -Parent | Split-Path -Leaf
+  Write-Output "QUARTO_PYTHON set to Poetry venv: $venvName"
+  $env:QUARTO_PYTHON=$var                 # override with poetry venv python as needed
+} else {
+  Write-Output "QUARTO_PYTHON set to $(pyenv version)"
+}
+
+# posh prompt shows current venv, so disable the prompt change above!
 oh-my-posh init pwsh --config=$env:USERPROFILE\.mysetup\jleonard99.omp.json| invoke-expression
 
 # SIG # Begin signature block
 # MIIcjwYJKoZIhvcNAQcCoIIcgDCCHHwCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCAVbk8RMx2IiqBR
-# e6Bb0VTcA6CGD/zat1EkrQLXUraocqCCC3owggW4MIIEoKADAgECAhN3AANz9uJH
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCBO9cMykEX8W6Ei
+# ppfWEhpVdJwyU5geeegrQkrh5/VTWaCCC3owggW4MIIEoKADAgECAhN3AANz9uJH
 # VnJLsSYVAAAAA3P2MA0GCSqGSIb3DQEBCwUAMHExEzARBgoJkiaJk/IsZAEZFgNl
 # ZHUxEzARBgoJkiaJk/IsZAEZFgN2Y3UxEzARBgoJkiaJk/IsZAEZFgNhZHAxFDAS
 # BgoJkiaJk/IsZAEZFgRSQU1TMRowGAYDVQQDExFWQ1UgSW5mb1NlYyBTdWJDQTAe
@@ -119,17 +131,17 @@ oh-my-posh init pwsh --config=$env:USERPROFILE\.mysetup\jleonard99.omp.json| inv
 # BAMTEVZDVSBJbmZvU2VjIFN1YkNBAhN3AANz9uJHVnJLsSYVAAAAA3P2MA0GCWCG
 # SAFlAwQCAQUAoIGEMBgGCisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcN
 # AQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUw
-# LwYJKoZIhvcNAQkEMSIEIC9NhMolzxy+blS+JJZlWvkF0WrHoCVEI7/vKZuXct4V
-# MA0GCSqGSIb3DQEBAQUABIIBACcWg1ctcp4C7kfLXZDNT/a3C6UlG2uua0l5mruJ
-# egW0ieA9lc8+RAS3buOKualRzD545i3GvscgYEwBkpnSYx2fG6itw/0we3yQh8Sv
-# 8i/8Ckl14MtvPlul6JaTMJEpGnFJR28Pq2RTFqzedi43Z3pxUzkmvUOFtatln1Eq
-# SnUIUIhWm/4erVEQK9rhgrXtIA7NdVVPMI4F63mu/IRNpjczwWlULMamVBaqYHQl
-# moKYZqqPRXQ2xLM1NW6piWP9sngu6UjmASRM00ZPYmJehbWEJa/NkbeyOIB/zuUt
-# UWWBqYC2oskI5TNBmcwfJxEyZLEjHeeB+XWKgAg3W7/5rs2hgg4sMIIOKAYKKwYB
+# LwYJKoZIhvcNAQkEMSIEIG6fdZXwoS9mUns1s/rLEW8/Cg5INTComkBMhVptYoL0
+# MA0GCSqGSIb3DQEBAQUABIIBAC4RMmFthyXBCkabRRprwxnNABEqo0L1WRolwWf+
+# cCwmvdxiCqt3v3rJVBy6gIe/cJTtAWv9V0qP6eIFeyILFAg3dZgIa5aEUwCxiEJG
+# mTm2J5pnkqOfyZtu8S2DkYqMSnS3DOrGscJfCIvAeLqW2lFaoH/71xvuo2nYHe3n
+# lKEO8r1MapnPrJtXgwYT5UCrvIjhbSBwSCXptSr1WfrPkfwuoSUGX7Ztug0YGQdt
+# 9OnjZE8RUlrhtpk/jfZHG0qfRlnwDpuQWrvpgomeKRAVTJWIvKgoygNw50w44mbL
+# A3/E2Ij6xGHDr0HCIwClFrO5ejigWUF/Cp5h3g51dvpUEQ2hgg4sMIIOKAYKKwYB
 # BAGCNwMDATGCDhgwgg4UBgkqhkiG9w0BBwKggg4FMIIOAQIBAzENMAsGCWCGSAFl
 # AwQCATCB/wYLKoZIhvcNAQkQAQSgge8EgewwgekCAQEGC2CGSAGG+EUBBxcDMCEw
-# CQYFKw4DAhoFAAQUuZq8oUvL0/L1J3qVH/DjGcj265wCFQDL2qrlgMQOBq5bf7z7
-# hcWGxss6SxgPMjAyMzEwMDcwODQyMTJaMAMCAR6ggYakgYMwgYAxCzAJBgNVBAYT
+# CQYFKw4DAhoFAAQU0Z5ZEeP/k5WmVWB2hEQMSA75RaECFQC383m28qleU6YDUziN
+# JOy7+425ehgPMjAyMzExMDMxMTMzMjdaMAMCAR6ggYakgYMwgYAxCzAJBgNVBAYT
 # AlVTMR0wGwYDVQQKExRTeW1hbnRlYyBDb3Jwb3JhdGlvbjEfMB0GA1UECxMWU3lt
 # YW50ZWMgVHJ1c3QgTmV0d29yazExMC8GA1UEAxMoU3ltYW50ZWMgU0hBMjU2IFRp
 # bWVTdGFtcGluZyBTaWduZXIgLSBHM6CCCoswggU4MIIEIKADAgECAhB7BbHUSWhR
@@ -193,13 +205,13 @@ oh-my-posh init pwsh --config=$env:USERPROFILE\.mysetup\jleonard99.omp.json| inv
 # bjEfMB0GA1UECxMWU3ltYW50ZWMgVHJ1c3QgTmV0d29yazEoMCYGA1UEAxMfU3lt
 # YW50ZWMgU0hBMjU2IFRpbWVTdGFtcGluZyBDQQIQe9Tlr7rMBz+hASMEIkFNEjAL
 # BglghkgBZQMEAgGggaQwGgYJKoZIhvcNAQkDMQ0GCyqGSIb3DQEJEAEEMBwGCSqG
-# SIb3DQEJBTEPFw0yMzEwMDcwODQyMTJaMC8GCSqGSIb3DQEJBDEiBCB5SY9paEwN
-# y1mrvkPJ9tNcicTetWgFgsRY0BW0L7iSLDA3BgsqhkiG9w0BCRACLzEoMCYwJDAi
+# SIb3DQEJBTEPFw0yMzExMDMxMTMzMjdaMC8GCSqGSIb3DQEJBDEiBCDX3YABeyUU
+# MHRqgCHkFs4jx7LpKADBQ+Jr0hcl6sK7GzA3BgsqhkiG9w0BCRACLzEoMCYwJDAi
 # BCDEdM52AH0COU4NpeTefBTGgPniggE8/vZT7123H99h+DALBgkqhkiG9w0BAQEE
-# ggEArA5oQHjI3HOl3FFrFPy4ycGSvtH/Uz84vHqMhRpNc0uXXSwUa9u3lev3ehsW
-# HTHvBucEfq8w78hJ2A0d63njKxac3lHgWFNOb0cW1rRtFooAM1SW7/wfoILWztC0
-# LiuZIdmrnU4oWBgdtT6yrAlh7YMr+uwze5zY61+eLB+/+HV8/uCrExmI4YDS8bvk
-# GQeMqSTk3s6BUo9WEQIiGpNRUTRDpqlAhWRiEwSfvC/cJBECA1KxgpUvcqHGRp/m
-# t//xD0EkiaABK25KKVcAGi7wfFx1OU7B0ZjQOlJLQWBR2BocqyQPFfPiDg/GI42/
-# a7sZl4Pnv0adebGXo5XpVR4fLg==
+# ggEARDcJBxwPUzl2kWtFM7snTI4ooiIPdqLhlafzJU3+mmq6luGq/HxKUk1bS0Vl
+# lgrPxZ1RmHv0EDNvXxTpg4i9ku5x+0Xsda/D5aH3Kc6NLv8xTZnXpILyM53vsQwP
+# GO6TizP2aCzZHOPpaK1qOPqdY7rCskfqXuff9WL0Tkg9HIxtB8Kff9+zQBISu5g0
+# 54RrzV20tIudSvuqPzDW4eyOWAFGG6WDwgQMPKzHFzgfR9hB83/xx4x0uKdgj0v/
+# QMT2Z38kZ8yDFLV8L0RA0ScNqV5+MJQBvwpbbXowvluEJZUKZnDtH7Rxx4qa33Sa
+# hQm9J9p+tabSh4wwrlYj6cN+kA==
 # SIG # End signature block
