@@ -39,6 +39,15 @@
 
 write-output "Running profile: $PROFILE"
 
+$ENV:PATH="$ENV:PATH;$ENV:APPDATA\Python\Scripts"
+$ENV:PATH="$ENV:PATH;C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn"
+
+## Aliases added on 10/29/2023 by JL
+## The powershell SET-ALIAS function doesn't accept arguments, so we'll use function instead
+function ListPath {$env:PATH -split ";"}
+function ListEnv {Get-ChildItem Env: | Sort-Object Name | Format-Table Name, Value -AutoSize}
+
+
 # These settings disable annoying quarto messages
 $env:DENO_NO_UPDATE_CHECK=1               # to warning about deno upgrades
 $env:DENO_TLS_CA_STORE="system"           # to stop the BAD CERTIFICATE deno warning
