@@ -43,6 +43,7 @@ try {
     Add-LocalGroupMember -Group $groupName -Member $memberName -ErrorAction Stop
 
     Write-Host "Member '$memberName' added to the group '$groupName' successfully."
+    Write-Host "run `gpupdate --force` to active group policies without a logout/login"
 }
 catch {
     # Check for "Access denied" error and handle it
