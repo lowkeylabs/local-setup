@@ -1,17 +1,43 @@
 
-# Original pyenv strings
+# Install of pyenv
+## https://medium.com/@aashari/easy-to-follow-guide-of-how-to-install-pyenv-on-ubuntu-a3730af8d7f0
 
-#export PYENV_ROOT="$HOME/.pyenv"
-#command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-#eval "$(pyenv init -)"
+sudo apt install -y make build-essential libssl-dev zlib1g-dev libbz2-dev \
+  libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils \
+  tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+curl https://pyenv.run | bash
+echo -e 'export PYENV_ROOT="$HOME/.pyenv"\nexport PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+echo -e 'eval "$(pyenv init --path)"\neval "$(pyenv init -)"' >> ~/.bashrc
+pyenv update
+pyenv install 3.12.4
+pyenv global 3.12.4
 
-# modified pyenv strings to work inside WSL
+
+# Install POETRY
+curl -sSL https://install.python-poetry.org | python3 -
+export PATH="$HOME/.local/bin:$PATH"
+
+# Install quarto
+# Set the version number
+VERSION="1.5.56"
+URL="https://github.com/quarto-dev/quarto-cli/releases/download/v${VERSION}/quarto-${VERSION}-linux-amd64.deb"
+curl -L -O "$URL"
+FILENAME="quarto-${VERSION}-linux-amd64.deb"
+sudo dpkg -i ./"$FILENAME"
+
+# Fix any missing dependencies
+sudo apt-get install -f
+
+##
+## Updates for .bashrc
+##
 
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
 
-# used to set up poetry
+# Adds poetry and poetry scripts to path
 export PATH="$HOME/.local/bin:$PATH"
 
 # Used to set up quarto in WSL.
