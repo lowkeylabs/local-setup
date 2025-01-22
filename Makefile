@@ -12,7 +12,7 @@ archive-zsh-tools:
 
 unarchive-zsh-tools.title = Overwrite current ZSH shell configuration
 unarchive-zsh-tools:
-	tar -xzvf zsh-setup.tar.gz -C ~
+	tar -xzvf zsh-setup.tar.gz --strip-components=2 -C ~
 
 install-zsh-tools-1.title = Install and switch to ZSH
 install-zsh-tools-1:
