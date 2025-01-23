@@ -2,23 +2,44 @@
 
 help:
 	@echo "Available targets:"
-	@awk -F '[:=]' '\
-		/^[a-zA-Z0-9_-]+:/ && !/^[.](PHONY|help):/ { \
-			target = $$1; \
+	@{ \
+		awk -F '[:=]' '\
+			/^[a-zA-Z0-9_-]+[.]title[[:space:]]*:?=/ { \
+				split($$1, parts, "."); \
+				target = parts[1]; \
+				match($$0, /=.*/, result); \
+				title = substr(result[0], 2); \
+				gsub(/^[ \t]+/, "", title); \
+				titles[target] = title; \
+			} \
+			END { \
+				for (target in titles) { \
+					printf "TITLE %s %s\n", target, titles[target]; \
+				} \
+			}' Makefile; \
+		make -pRrq | grep -E "^[a-zA-Z0-9_-]+:([^=]|$$)" | grep -v "^[Mm]akefile" | \
+		awk -F ':' '\
+			/^[a-zA-Z0-9_-]+:/ { \
+				target = $$1; \
+				print "TARGET", target; \
+			}'; \
+	} | awk '\
+		/^TITLE/ { \
+			titles[$$2] = substr($$0, index($$0, $$3)); \
+		} \
+		/^TARGET/ { \
+			target = $$2; \
 			if (!(target in titles)) { \
 				titles[target] = "no title provided"; \
 			} \
-			order[++count] = target; \
-		} \
-		/^[a-zA-Z0-9_-]+[.]title[[:space:]]*=/ { \
-			split($$1, parts, "."); \
-			target = parts[1]; \
-			titles[target] = $$2; \
-			gsub(/^[ \t]+/, "", titles[target]); \
+			targets[++count] = target; \
 		} \
 		END { \
+			asort(targets); \
 			for (i = 1; i <= count; i++) { \
-				target = order[i]; \
-				printf "  %-15s %s\n", target, titles[target]; \
+				target = targets[i]; \
+				if (titles[target] != ".hidden") { \
+					printf "  %-15s %s\n", target, titles[target]; \
+				} \
 			} \
-		}' Makefile
+		}'
