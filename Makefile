@@ -7,7 +7,7 @@ default:
 
 archive-zsh-tools.title = Create snapshot of current ZSH shell configuration
 archive-zsh-tools:
-	tar -czvf zsh-setup.tar.gz ~/.p10k.zsh ~/.oh-my-zsh ~/.makefilehelp ~/.zsh_aliases ~/.zshrc 
+	tar -czvf zsh-setup.tar.gz ~/.p10k.zsh ~/.oh-my-zsh ~/.makefilehelp ~/.zsh_aliases ~/.zshrc ~/.zshenv
 
 unarchive-zsh-tools.title = Overwrite current ZSH shell configuration
 unarchive-zsh-tools:
@@ -40,3 +40,9 @@ upgrade-quarto:
 	curl -L -o quarto-1.6.40-linux-amd64.deb https://github.com/quarto-dev/quarto-cli/releases/download/v1.6.40/quarto-1.6.40-linux-amd64.deb
 	sudo dpkg -i quarto-1.6.40-linux-amd64.deb
 	rm quarto-1.6.40-linux-amd64.deb
+
+zScaler-notes.title = Zscaler notes for wsl
+zScaler-notes:
+	@echo Check for Zscaler certificates in /usr/local/share/ca-certificates
+	@echo run sudo update-ca-certicates to install for wsl
+	@echo set export REQUESTS_CA_CERTIFICATES=/usr/local/share/ca-certificates/cacert.pem
