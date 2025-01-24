@@ -1,7 +1,7 @@
 
 -include ~/.makefilehelp
 
-default.title = .hide # don't show this target
+default.title = .hidden
 default:
 	echo Do nothing.  Serves as a stop to stop first target from running.
 
