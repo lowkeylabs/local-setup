@@ -7,7 +7,7 @@ default:
 
 archive-zsh-tools.title = Create snapshot of current ZSH shell configuration
 archive-zsh-tools:
-	tar -czvf zsh-setup.tar.gz ~/.p10k.zsh ~/.oh-my-zsh ~/.makefilehelp ~/.zsh_aliases ~/.zshrc ~/.zshenv
+	tar -czvf zsh-setup.tar.gz ~/.p10k.zsh ~/.oh-my-zsh ~/.makefilehelp ~/.zsh_aliases ~/.zshrc ~/.zshenv ~/.zsh_profile
 
 unarchive-zsh-tools.title = Overwrite current ZSH shell configuration
 unarchive-zsh-tools:
