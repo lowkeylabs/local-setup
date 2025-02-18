@@ -36,6 +36,7 @@ install-zsh-tools-2:
 	## ZSH_THEME="powerlevel10k/powerlevel10k"
 	## plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
 
+upgrade-quarto.title = Upgrade Quarto
 upgrade-quarto:
 	curl -L -o quarto-1.6.40-linux-amd64.deb https://github.com/quarto-dev/quarto-cli/releases/download/v1.6.40/quarto-1.6.40-linux-amd64.deb
 	sudo dpkg -i quarto-1.6.40-linux-amd64.deb
@@ -46,3 +47,8 @@ zScaler-notes:
 	@echo Check for Zscaler certificates in /usr/local/share/ca-certificates
 	@echo run sudo update-ca-certicates to install for wsl
 	@echo set export REQUESTS_CA_CERTIFICATES=/usr/local/share/ca-certificates/cacert.pem
+
+upgrade-ohmyzsh.title = Upgrade oh-my-zsh
+upgrade-ohmyzsh:
+	cd ~/.oh-my-zsh && git pull
+	
