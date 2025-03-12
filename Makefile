@@ -37,10 +37,12 @@ install-zsh-tools-2:
 	## plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
 
 upgrade-quarto.title = Upgrade Quarto
+qv = $(shell curl -s https://quarto.org/docs/download/_download.json | grep -oP '"version":\s*"\K[0-9.]+')
 upgrade-quarto:
-	curl -L -o quarto-1.6.40-linux-amd64.deb https://github.com/quarto-dev/quarto-cli/releases/download/v1.6.40/quarto-1.6.40-linux-amd64.deb
-	sudo dpkg -i quarto-1.6.40-linux-amd64.deb
-	rm quarto-1.6.40-linux-amd64.deb
+	echo $(qv)
+	curl -L -o quarto-latest.deb https://github.com/quarto-dev/quarto-cli/releases/download/v$(qv)/quarto-$(qv)-linux-amd64.deb
+	sudo dpkg -i quarto-latest.deb
+	rm quarto-latest.deb
 
 zScaler-notes.title = Zscaler notes for wsl
 zScaler-notes:
