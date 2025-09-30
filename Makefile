@@ -53,4 +53,13 @@ zScaler-notes:
 upgrade-ohmyzsh.title = Upgrade oh-my-zsh
 upgrade-ohmyzsh:
 	cd ~/.oh-my-zsh && git pull
-	
+
+## This uses Ubuntu/debian feature "update-alternatives" which provides mapping
+## of common commands to different alternatives.
+## win-explorer.sh is a tiny shell scropt what opens files using windows exlorer.exe
+## to ensure that native programs are displayed.
+
+install-win-explorer.title = Install win-explorer.sh using update-alternatives
+install-win-explorer:
+	chmod +x ~/.mysetup/win-explorer.sh
+	sudo update-alternatives --install /usr/bin/open open ~/.mysetup/win-explorer.sh 60
