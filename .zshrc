@@ -1,12 +1,39 @@
+
+# If you come from bash you might have to change your $PATH.
+export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
+
+# Set things up for pyenv
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+# Ensure Quarto finds the correct Python from pyenv or poetry if a virtual environment exists.
+
+export QUARTO_PYTHON=$(pyenv which python)  # Default to pyenv global or local Python
+export PYTHON_PATH=$(pyenv which python)  # Default to pyenv global or local Python
+
+
+# Check if Poetry virtual environment exists
+pythonPoetryPath=$(poetry env info -e 2>/dev/null)
+
+if [[ -n "$pythonPoetryPath" ]]; then
+  # Extract the venv name from the Python Poetry path
+  venvName=$(basename "$(dirname "$(dirname "$pythonPoetryPath")")")
+  echo "QUARTO_PYTHON set to Poetry venv: $venvName"
+  export QUARTO_PYTHON="$pythonPoetryPath"  # Override with Poetry venv Python if available
+  export PYTHONPATH="$pythonPoetryPath"
+  export WORKON_HOME=$(dirname "$(poetry env info -p)")
+else
+  echo "QUARTO_PYTHON set to $(pyenv version)"
+fi
+
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
-
-# If you come from bash you might have to change your $PATH.
-export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
@@ -89,6 +116,8 @@ zstyle ':completion:*:cd:*' tag-order local-directories
 zstyle ':completion:*:cd:*' menu select
 zstyle ':completion:*' list-dirs-first true
 
+# All zstyle commands should come BEFORE compinit
+
 autoload -Uz compinit
 compinit
 
@@ -122,10 +151,8 @@ compinit
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 
-alias dir="ls -alF --group-directories"
-
-if [[ "$SHLVL" -eq 1 && "$0" == "-zsh" && "$(hostname)" == "Scrollsaw" ]]; then
-    cd ~/projects
+if [[ -f ~/.zsh_aliases ]]; then
+    source ~/.zsh_aliases
 fi
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
@@ -139,7 +166,6 @@ zle -N clear_prompt_input
 bindkey '\e' clear_prompt_input
 
 
-
 # Key bindings
 bindkey '^I' expand-or-complete   # TAB for cycling/autocompletion
 bindkey '^[[A' history-search-backward
@@ -148,26 +174,22 @@ bindkey '^R' fzf-history-widget
 
 export KEYTIMEOUT=10
 
-# Set things up for pyenv
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
 
 # Set things up for node version manager
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 #[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
-
 ## It's best to NOT work directly on a windows drive, rather it's best to keep WSL and Windows file systems separate.
 # Change directory to Projects folder only on first login shell and when hostname is 'Scrollsaw'
-#if [[ "$SHLVL" -eq 1 && "$0" == "-bash" && "$(hostname)" == "Scrollsaw" ]]; then
-#    cd /mnt/d/Users/JohnLeonard/Projects
-#fi
+# Define an array of hostnames
+valid_hostnames=("Scrollsaw" "EGR-JL-RAK1-SRV" "EGR-JL-LAP2-X1" "EGR-JL-LAP1-P16" "doveshell")
 
-if [[ "$SHLVL" -eq 1 && "$0" == "-bash" && "$(hostname)" == "Scrollsaw" ]]; then
+# Check if the current hostname is in the array
+if [[ "$SHLVL" -eq 1 && "$0" == "-zsh" && " ${valid_hostnames[*]} " == *" $(hostname) "* ]]; then
     cd ~/projects
 fi
 
 # Set up for buildx in docker
 export DOCKER_BUILDKIT=1
+
