@@ -17,7 +17,7 @@ install-zsh-tools-1.title = Install and switch to ZSH
 install-zsh-tools-1:
 	sudo apt update
 	sudo apt install zsh
-	sudo apt install fzf make gawk sed gh git
+	sudo apt install fzf make gawk sed gh git direnv
 	chsh -s $(which zsh)
 
 install-zsh-tools-2.title = Install ZSH helpers

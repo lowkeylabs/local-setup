@@ -193,3 +193,4 @@ fi
 # Set up for buildx in docker
 export DOCKER_BUILDKIT=1
 
+eval "$(direnv hook zsh)"
